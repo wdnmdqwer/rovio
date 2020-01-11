@@ -146,6 +146,8 @@ class RovioNode{
   ros::Publisher pubMarkers_;          /**<Publisher: Ros line marker, indicating the depth uncertainty of a landmark.*/
   ros::Publisher pubExtrinsics_[mtState::nCam_];
   ros::Publisher pubImuBias_;
+  ros::Publisher pubVelocity_;
+  ros::Time imgCallStart;
 
   // Ros Messages
   geometry_msgs::TransformStamped transformMsg_;
@@ -203,6 +205,7 @@ class RovioNode{
     forceMarkersPublishing_ = false;
     forcePatchPublishing_ = false;
     gotFirstMessages_ = false;
+	imgCallStart = ros::Time::now();
 
     // Subscribe topics
     subImu_ = nh_.subscribe("imu0", 1000, &RovioNode::imuCallback,this);
@@ -477,6 +480,7 @@ class RovioNode{
    */
   void imgCallback0(const sensor_msgs::ImageConstPtr & img){
     std::lock_guard<std::mutex> lock(m_filter_);
+	imgCallStart = ros::Time::now();
     imgCallback(img,0);
   }
 
@@ -742,9 +746,12 @@ class RovioNode{
           odometryMsg_.twist.twist.linear.x = imuOutput_.BvB()(0);
           odometryMsg_.twist.twist.linear.y = imuOutput_.BvB()(1);
           odometryMsg_.twist.twist.linear.z = imuOutput_.BvB()(2);
-          odometryMsg_.twist.twist.angular.x = imuOutput_.BwWB()(0);
-          odometryMsg_.twist.twist.angular.y = imuOutput_.BwWB()(1);
-          odometryMsg_.twist.twist.angular.z = imuOutput_.BwWB()(2);
+
+		  ros::Duration diff = ros::Time::now() - imgCallStart;
+          odometryMsg_.twist.twist.angular.x = diff.toSec();
+          //odometryMsg_.twist.twist.angular.x = imuOutput_.BwWB()(0);
+          //odometryMsg_.twist.twist.angular.y = imuOutput_.BwWB()(1);
+          //odometryMsg_.twist.twist.angular.z = imuOutput_.BwWB()(2);
           for(unsigned int i=0;i<6;i++){
             unsigned int ind1 = mtOutput::template getId<mtOutput::_vel>()+i;
             if(i>=3) ind1 = mtOutput::template getId<mtOutput::_ror>()+i-3;
