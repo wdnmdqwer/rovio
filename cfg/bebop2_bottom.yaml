@@ -1,0 +1,14 @@
+###### Camera Calibration File For Cam 0 of Euroc Datasets ######
+image_width: 240
+image_height: 240
+camera_name: cam0
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [364.91104, 0.0, 379.9199, 0.0, 364.97213, 245.53235, 0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data:  [-0.14298, 0.060657, -0.00385419, 0.005294, 0.0]
+
