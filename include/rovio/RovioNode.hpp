@@ -83,6 +83,7 @@ class RovioNode{
   typedef typename std::tuple_element<2,typename mtFilter::mtUpdates>::type mtVelocityUpdate;
   typedef typename mtVelocityUpdate::mtMeas mtVelocityMeas;
   mtVelocityMeas velocityUpdateMeas_;
+  bool imgCallBackOnce = false;
 
   struct FilterInitializationState {
     FilterInitializationState()
@@ -448,7 +449,7 @@ class RovioNode{
     if(init_state_.isInitialized()){
       mpFilter_->addPredictionMeas(predictionMeas_,imu_msg->header.stamp.toSec());
       updateAndPublish();
-    } else {
+    } else if (imgCallBackOnce){
       switch(init_state_.state_) {
         case FilterInitializationState::State::WaitForInitExternalPose: {
           std::cout << "-- Filter: Initializing using external pose ..." << std::endl;
@@ -481,6 +482,7 @@ class RovioNode{
   void imgCallback0(const sensor_msgs::ImageConstPtr & img){
     std::lock_guard<std::mutex> lock(m_filter_);
 	imgCallStart = ros::Time::now();
+    imgCallBackOnce = true;
     imgCallback(img,0);
   }
 
@@ -748,10 +750,12 @@ class RovioNode{
           odometryMsg_.twist.twist.linear.z = imuOutput_.BvB()(2);
 
 		  ros::Duration diff = ros::Time::now() - imgCallStart;
-          odometryMsg_.twist.twist.angular.x = diff.toSec();
-          //odometryMsg_.twist.twist.angular.x = imuOutput_.BwWB()(0);
-          //odometryMsg_.twist.twist.angular.y = imuOutput_.BwWB()(1);
-          //odometryMsg_.twist.twist.angular.z = imuOutput_.BwWB()(2);
+          odometryMsg_.pose.covariance[1] = diff.toSec();
+          // odometryMsg_.pose.covariance[1] = 1.;
+          // odometryMsg_.twist.twist.angular.x = diff.toSec();
+          odometryMsg_.twist.twist.angular.x = imuOutput_.BwWB()(0);
+          odometryMsg_.twist.twist.angular.y = imuOutput_.BwWB()(1);
+          odometryMsg_.twist.twist.angular.z = imuOutput_.BwWB()(2);
           for(unsigned int i=0;i<6;i++){
             unsigned int ind1 = mtOutput::template getId<mtOutput::_vel>()+i;
             if(i>=3) ind1 = mtOutput::template getId<mtOutput::_ror>()+i-3;
