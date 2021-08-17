@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<launch>
+  <arg name="seq_name" default = "2020_12_26_15_07_00" />
+  <node pkg="rovio" type="rovio_rosbag_loader" name="rovio" output="screen">
+  <param name="filter_config" value="$(find rovio)/cfg/iphone.info"/>
+  <param name="camera0_config" value="$(find rovio)/cfg/iphone.yaml"/>
+  <param name="rosbag_filename" value="/home/zsk/Downloads/iphonedataset/$(arg seq_name).bag"/>
+  <param name="imu_topic_name" value="/imu0"/>
+  <param name="cam0_topic_name" value="/camera/image_raw"/>
+  <!-- <param name="record_pose_with_covariance_stamped" value="true"/> -->
+  <param name="record_odometry" value="true"/>
+  <param name="filename_out" value="/home/zsk/Downloads/iphonedataset/rovio_default"/>
+  </node>
+</launch>
